@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPm in the Making ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #ff758c;
+            --secondary: #ff7eb3;
+            --glass: rgba(255, 255, 255, 0.2);
+            --text: #2d3436;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #fdf2f2;
+            font-family: 'Quicksand', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Bubbles/Game Canvas */
+        #canvas { position: absolute; top: 0; left: 0; z-index: 1; cursor: crosshair; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px 25px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            pointer-events: auto; /* Para clickable pa rin ang buttons */
+        }
+
+        .profile-img {
+            width: 80px; height: 80px;
+            background: white;
+            border-radius: 50%;
+            margin: -80px auto 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 { font-family: 'Dancing Script', cursive; color: var(--text); font-size: 2.5rem; margin-bottom: 5px; }
+        
+        .role {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
+            color: #e73c7e; text-transform: uppercase; margin-bottom: 20px;
+            display: block;
+        }
+
+        #typing-text {
+            font-size: 0.95rem; color: #444; min-height: 50px;
+            margin-bottom: 30px; line-height: 1.5; font-weight: 500;
+        }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn {
+            padding: 15px; border-radius: 15px; border: none;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-love { background: #ff758c; color: white; grid-column: span 2; box-shadow: 0 10px 20px rgba(255, 117, 140, 0.3); }
+        .btn-study { background: #6c5ce7; color: white; }
+        .btn-rest { background: #00b894; color: white; }
+
+        /* Secret Hidden Elements */
+        .hidden-gift {
+            position: absolute; width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.2; z-index: 5; transition: 0.5s;
+        }
+        .hidden-gift:hover { opacity: 1; transform: scale(1.3) rotate(20deg); }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100;
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; color: white; text-align: center; padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="hidden-gift" style="top: 5%; right: 10%;" onclick="showSecret('💡 TIP: Focus on Theories of Personality today! Pero wag kakalimutan uminom ng tubig.')">📔</div>
+    <div class="hidden-gift" style="bottom: 5%; left: 10%;" onclick="showSecret('🎁 REWARD: Pagkatapos ng review, deserve mo ng favorite coffee mo! My treat!')">🥤</div>
+    <div class="hidden-gift" style="top: 15%; left: 5%;" onclick="showSecret('💖 NOTE: I\'m so lucky to have a hardworking wabeya like you. I love you!')">💌</div>
+
+    <div class="glass-card">
+        <div class="profile-img">🧠</div>
+        <span class="role">Future Registered Psychometrician</span>
+        <h1>For my wabeya!</h1>
+        
+        <div id="typing-text"></div>
+
+        <div class="btn-grid">
+            <button class="btn btn-love" onclick="boost()">CLICK HERE❤️</button>
+            <button class="btn btn-study" onclick="studyMode()">Review Motivation 📚</button>
+            <button class="btn btn-rest" onclick="restMode()">Pahinga Mode 😴</button>
+        </div>
+        <p style="font-size: 1rem; color: #888; margin-top: 15px;">Tip: Pwede i-pop yung bubbles sa background wabii! 🧼</p>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeSecret()">
+        <div style="font-size: 50px; margin-bottom: 20px;">✨</div>
+        <h2 id="secret-title">Secret Message</h2>
+        <p id="secret-body" style="margin-top: 15px; font-size: 1.1rem; line-height: 1.6;"></p>
+        <p style="margin-top: 30px; font-size: 0.8rem; opacity: 0.6;">(Tap anywhere to close)</p>
+    </div>
+
+    <script>
+        // FAIL-SAFE AUDIO: Gagamit tayo ng Pixabay at Cloudflare para hindi ma-block
+        const popSnd = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_c3561e16c0.mp3'); 
+        const winSnd = new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_0625c1539c.mp3');
+        const bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.3;
+        // Typing Effect
+        const msg = "Hi WABEYA! I know you're tired from work and review, but look at you, still pushing! Sobrang proud ako sa'yo. Konti na lang, RPm ka na. I'm always here for you! ✨";
+        let charIdx = 0;
+        function typeWriter() {
+            if (charIdx < msg.length) {
+                document.getElementById("typing-text").innerHTML += msg.charAt(charIdx);
+                charIdx++;
+                setTimeout(typeWriter, 40);
+            }
+        }
+        window.onload = typeWriter;
+
+        // Functions with error catching for audio
+        function playSnd(audio) {
+            audio.play().catch(() => console.log("Audio blocked by browser, click something first!"));
+        }
+
+        function boost() {
+            playSnd(bgMusic);
+            playSnd(winSnd);
+            if(typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+            showSecret("KAYANG KAYA MO YAN MY FUTURE RPM!", "Walang Psychometrician Board Exam ang tatalo sa'yo. I love you always mahal!");
+        }
+
+        function studyMode() {
+            playSnd(popSnd);
+            // Dito mo ilagay yung eksaktong gusto mong sabihin
+            const tip = "Imagine your name: Agatha Amor A. Galicia, RPm."; 
+            showSecret("Review Motivation", tip);
+        }
+
+        function restMode() {
+            playSnd(popSnd);
+            showSecret("Pahinga Mode 🛌", "Take a 5-minute break. Inhale confidence, exhale fatigue.");
+        }
+
+        function showSecret(t, b) {
+            document.getElementById('secret-title').innerText = t;
+            document.getElementById('secret-body').innerText = b;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function closeSecret() { document.getElementById('overlay').style.display = 'none'; }
+
+        // BUBBLE SYSTEM
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let bubbles = [];
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Bubble {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 50;
+                this.r = Math.random() * 20 + 10;
+                this.speed = Math.random() * 1.5 + 0.5;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.fill();
+                ctx.strokeStyle = 'white'; ctx.stroke();
+            }
+            update() { this.y -= this.speed; if(this.y < -50) { this.y = canvas.height+50; this.x = Math.random()*canvas.width; } }
+        }
+
+        for(let i=0; i<20; i++) bubbles.push(new Bubble());
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            bubbles.forEach(b => { b.update(); b.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function handlePop(e) {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            bubbles.forEach((b, idx) => {
+                if(Math.hypot(x-b.x, y-b.y) < b.r + 10) {
+                    playSnd(popSnd);
+                    bubbles[idx] = new Bubble();
+                    if(typeof confetti === 'function') {
+                        confetti({ particleCount: 5, origin: {x: x/window.innerWidth, y: y/window.innerHeight} });
+                    }
+                }
+            });
+        }
+        canvas.addEventListener('mousedown', handlePop);
+        canvas.addEventListener('touchstart', handlePop);
+    </script>
+</body>
+</html>
